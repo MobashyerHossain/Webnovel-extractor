@@ -230,7 +230,7 @@ def save_chapters(novel_name, site_link, chapter_list, start_cpt, end_cpt):
     ed_cpt = end_cpt+1
 
     for index, chapter_link in enumerate(chapter_list[start_cpt:end_cpt+1], start_cpt):
-        ed_cpt = index
+        ed_cpt = index + 1
         chapter_link = site_link + chapter_link['href']
         # print(chapter_link)
         chapter_title, chapter_content = get_chapter_content(chapter_link)
@@ -240,13 +240,12 @@ def save_chapters(novel_name, site_link, chapter_list, start_cpt, end_cpt):
         LNdocument.add_paragraph(chapter_content)
 
         #devide every 50 chapter in different doc file
-        if index % 50 == 0:            
+        if (ed_cpt % 50 == 0):            
             doc_name = "{} {} - {}.docx".format(dirName, str(st_cpt), str(ed_cpt))
             LNdocument.save(dirName+'/'+doc_name)
             LNdocument = Document()
-            st_cpt = index
-    
-    ed_cpt = ed_cpt + 1
+            st_cpt = ed_cpt+1
+
     doc_name = "{} {} - {}.docx".format(dirName, str(st_cpt), str(ed_cpt))
     LNdocument.save(dirName+'/'+doc_name)
 
