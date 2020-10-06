@@ -6,6 +6,13 @@ import os
 
 ########################################     Helpers Start     ########################################
 
+def options(limit):
+    option = -1
+    while(option < 1 or option > limit):
+        option = int(input('\nchoice: '))
+    
+    return option
+
 def clear():
     os.system('cls')
 
@@ -14,6 +21,22 @@ def get_page_html(link):
     page_html = soup(page.content, "html.parser")
     page.close()
     return page_html
+
+def check_novel_in_favourite(novel_given):
+    status = False
+    favs = []
+    try:
+        f = open("wuxia_favourites_list.txt", 'r')
+        favs = f.readlines()
+        f.close()
+    except:
+        pass
+    
+    if (len(favs) != 0):
+        if novel_given in favs:
+            status = True
+
+    return status
 
 def structuring_chapter(cpt):
     #replace all unneccessary content
@@ -114,14 +137,12 @@ def wuxia_world():
 
     site_link = "https://m.wuxiaworld.co"
 
-    print('Welcome to Wuxia World!')
+    print('Welcome to Wuxia World!\n')
     print('1. Choose from Faveourites')
     print('2. Search by Novel name')
     print('3. Go Back')
 
-    option = -1
-    while(option < 1 or option > 3):
-        option = int(input('choice: '))
+    option = options(3)
 
     if option == 1:
         wuxia_faveourites(site_link)
@@ -130,17 +151,80 @@ def wuxia_world():
     else:
         main()
 
+def wuxia_search(site_link, novel_name = ''):
+    clear()
+    print("Search Page!\n")
+
+    if novel_name == '':
+        novel_name = input("Novel Name: ")
+    
+    novel = novel_name.lower().replace(' ', '-').replace("'", '-').replace('\n', '')
+    novel_page_link = '/' +  novel + '/'
+
+    novel_page_html = get_page_html(site_link + novel_page_link)
+    chapter_list = []
+
+    try:
+        chapter_list = novel_page_html.find_all("a", class_="chapter-item")
+    except:
+        pass
+
+    total_chapters = len(chapter_list)
+
+    if(total_chapters == 0):
+        print("Novel Not Found!")
+        print("\n1. Try Another Name")
+        print("2. Go Back")
+        option = options(2)
+        
+        if option == 1:
+            wuxia_search(site_link)
+        else:
+            wuxia_world()        
+    else:
+        print("Novel '{}' Found!".format(novel_name))
+        if check_novel_in_favourite(novel_name):
+            print("Novel already Added to Favourites")
+
+        print("\n1. View Novel Detail")
+
+        if not check_novel_in_favourite(novel_name):
+            print("2. Add Novel to Favourites")
+            print("3. Go Back")
+        else:
+            print("2. Go Back")             
+        
+        if not check_novel_in_favourite(novel_name):
+            option = options(3)
+
+            if option == 1:
+                wuxia_novel_detail(novel_name, site_link, novel_page_link, 1)
+            elif option == 2:
+                f = open("wuxia_favourites_list.txt", 'a')
+                f.write("\n{}".format(novel_name))
+                f.close()
+                wuxia_novel_detail(novel_name, site_link, novel_page_link, 0)
+            else:
+                wuxia_world()
+        else:
+            option = options(2)
+
+            if option == 1:
+                wuxia_novel_detail(novel_name, site_link, novel_page_link, 0)
+            else:
+                wuxia_world()
+
 def wuxia_faveourites(site_link):
     clear()
     print("Favourites!\n")
 
     try:
         f = open("wuxia_favourites_list.txt", 'r')
-        favs = f.readlines()
+        favs = [x.replace('\n', '') for x in f.readlines() if x != '\n']
+        f.close()
     except:
-        f = open("wuxia_favourites_list.txt", 'a+')
-        favs = []
-    
+        favs = []    
+
     if (len(favs) != 0):
         for i, line in enumerate(favs, 1):
             print("{}. {}".format(i, line.replace('\n', '')))
@@ -148,21 +232,12 @@ def wuxia_faveourites(site_link):
     else:
         print('No Favourites Added yet')
         print('1. Go Back')
-        backop = -1
-        while backop != 1:
-            backop = int(input('choice: '))
-        
-        if backop == 1:
-            wuxia_world()
+        option = options(1)
 
-    f.close()
+        if option == 1:
+            wuxia_world()    
 
-    print('\n')
-    option = -1
-    while(option < 1 or option > len(favs)+1):
-        option = int(input('choice: '))
-
-    
+    option = options(len(favs)+1)  
 
     if option == len(favs)+1:
         wuxia_world()
@@ -170,16 +245,30 @@ def wuxia_faveourites(site_link):
         novel_name = favs[option-1]
         novel = novel_name.lower().replace(' ', '-').replace("'", '-').replace('\n', '')
         novel_page_link = '/' +  novel + '/'
-        wuxia_novel(novel_name, site_link, novel_page_link)
+        wuxia_novel_detail(novel_name, site_link, novel_page_link)
 
-def wuxia_search(novel_link):
+def wuxia_novel_detail(novel_name, site_link, novel_page_link, backtrack = 0):
     clear()
-    print("Search Page!\n")
-    return 1
+    print("{}\n".format(novel_name))
 
-def wuxia_novel(novel_name, site_link, novel_page_link):
+    print("1. Browse Chapters")
+    print("2. View Summary")
+    print("3. Go Back")
+
+    option = options(3)
+
+    if option == 1:
+        wuxia_novel(novel_name, site_link, novel_page_link, backtrack)
+    else:
+        if backtrack == 0:
+            wuxia_faveourites(site_link)
+        else:
+            wuxia_search(site_link, novel_name)
+
+
+def wuxia_novel(novel_name, site_link, novel_page_link, backtrack = 0):
     clear()
-    print("Chapter List of\n{}".format(novel_name))
+    print("Chapter List of\n{}\n".format(novel_name))
     # print(novel_page_link)
 
     novel_page_html = get_page_html(site_link + novel_page_link)
@@ -197,9 +286,7 @@ def wuxia_novel(novel_name, site_link, novel_page_link):
     print("4. Save from First Chapter to 'X' Chapter")
     print("5. Go Back")
 
-    option = -1
-    while(option < 1 or option > 5):
-        option = int(input('choice: '))
+    option = options(5)
     
     start = [0,0]
     end = [0,0]
@@ -250,7 +337,10 @@ def wuxia_novel(novel_name, site_link, novel_page_link):
         start = [get_chapter_index(chapter_list, 0), 0]
  
     else:
-        wuxia_faveourites(site_link)
+        if backtrack == 0:
+            wuxia_faveourites(site_link)
+        else:
+            wuxia_search(site_link, novel_name)
     
     save_chapters(novel_name, site_link, chapter_list, start, end)
         
@@ -311,7 +401,15 @@ def get_chapter_list_index(chapter_list, cpt_index):
 
 def get_chapter_index(chapter_list, list_index):
     chapter = chapter_list[list_index].get_text()
-    index = chapter.split(' ')[0]
+    chapter = chapter.replace('.', ' ').replace('-', ' ')
+    index = 0
+    for i in chapter.split(' '):
+        try:
+            index = int(i)
+        except:
+            continue
+        break
+
     return int(index)
 
 
@@ -336,9 +434,7 @@ def main():
     print("1. Wuxiaworld")
     print("2. Novelfull")
 
-    site_choice = -1
-    while(site_choice < 1 or site_choice > 2):
-        site_choice = int(input('choice: '))
+    site_choice = options(2)
 
     if site_choice == 1:
         wuxia_world()
