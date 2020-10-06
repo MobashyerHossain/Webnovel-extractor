@@ -184,6 +184,7 @@ def wuxia_novel(novel_name, site_link, novel_page_link):
 
     novel_page_html = get_page_html(site_link + novel_page_link)
     chapter_list = novel_page_html.find_all("a", class_="chapter-item")
+    total_chapters = len(chapter_list)
 
 
     for i, chapter in enumerate(chapter_list, 1):
@@ -192,18 +193,27 @@ def wuxia_novel(novel_name, site_link, novel_page_link):
     print("\nWhat would you like to do?")
     print("1. Save All Chapters")
     print("2. Save Chapters in Selected Range")
-    print("3. Go Back")
+    print("3. Save from 'X' Chapter to the Last chapter")
+    print("4. Save from First Chapter to 'X' Chapter")
+    print("5. Go Back")
 
     option = -1
-    while(option < 1 or option > 3):
+    while(option < 1 or option > 5):
         option = int(input('choice: '))
     
+    start = [0,0]
+    end = [0,0]
+
     if option == 1:
-        save_chapters(novel_name, site_link, chapter_list, [0, 0], [len(chapter_list)-1, len(chapter_list)-1])
+        # save all chapters
+        start = [get_chapter_index(chapter_list, 0), 0]
+        end = [get_chapter_index(chapter_list, total_chapters-1), total_chapters-1]
+        
     elif option == 2:
+        # save selected range of chapters
         list_start = -1
         cpt_start = -1
-        while(list_start < 1 or list_start > (len(chapter_list) + 1)):
+        while(list_start < 1 or list_start > (total_chapters - 1)):
             cpt_start = int(input('Choose a Starting Chapter: '))
             # chapter index check
             list_start = get_chapter_list_index(chapter_list, cpt_start)
@@ -211,15 +221,38 @@ def wuxia_novel(novel_name, site_link, novel_page_link):
 
         list_end = -1
         cpt_end = -1
-        while(list_end < list_start or list_end > (len(chapter_list) + 1)):
+        while(list_end < list_start or list_end > (total_chapters - 1)):
             cpt_end = int(input('Choose a Ending Chapter: '))
             # chapter index check
             list_end = get_chapter_list_index(chapter_list, cpt_end)
         end = [cpt_end, list_end]
 
-        save_chapters(novel_name, site_link, chapter_list, start, end)
+    elif option == 3:
+        # save from X-Last
+        list_start = -1
+        cpt_start = -1
+        while(list_start < 1 or list_start > (total_chapters - 1)):
+            cpt_start = int(input('Choose a Starting Chapter: '))
+            # chapter index check
+            list_start = get_chapter_list_index(chapter_list, cpt_start)
+        start = [cpt_start, list_start]
+        end = [get_chapter_index(chapter_list, total_chapters-1), total_chapters-1]
+
+    elif option == 4:
+        # save from X-Last
+        list_end = -1
+        cpt_end = -1
+        while(list_end < 1 or list_end > (total_chapters - 1)):
+            cpt_end = int(input('Choose a Ending Chapter: '))
+            # chapter index check
+            list_end = get_chapter_list_index(chapter_list, cpt_end)
+        end = [cpt_end, list_end]
+        start = [get_chapter_index(chapter_list, 0), 0]
+ 
     else:
         wuxia_faveourites(site_link)
+    
+    save_chapters(novel_name, site_link, chapter_list, start, end)
         
 def save_chapters(novel_name, site_link, chapter_list, start, end):
     clear()
@@ -267,14 +300,20 @@ def get_chapter_content(chapter_link):
 
     return chapter_title, chapter_content
 
-def get_chapter_list_index(chapter_list, index):
-    currect_index = 0
+def get_chapter_list_index(chapter_list, cpt_index):
+    index = 0
     for i, cpt in enumerate(chapter_list, 0):
-        if str(index) in cpt.get_text():
-            currect_index = i
+        if str(cpt_index) in cpt.get_text():
+            index = i
             break
     
-    return currect_index
+    return index
+
+def get_chapter_index(chapter_list, list_index):
+    chapter = chapter_list[list_index].get_text()
+    index = chapter.split(' ')[0]
+    return int(index)
+
 
     
 
