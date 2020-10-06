@@ -199,27 +199,31 @@ def wuxia_novel(novel_name, site_link, novel_page_link):
         option = int(input('choice: '))
     
     if option == 1:
-        save_chapters(novel_name, site_link, chapter_list, 0, len(chapter_list)-1)
+        save_chapters(novel_name, site_link, chapter_list, [0, 0], [len(chapter_list)-1, len(chapter_list)-1])
     elif option == 2:
-        start = -1
-        while(start < 1 or start > len(chapter_list)):
-            start = int(input('Choose a Starting Chapter: '))
-        
-        end = -1
-        while(end < start or end > len(chapter_list)):
-            end = int(input('Choose a Ending Chapter: '))
+        list_start = -1
+        cpt_start = -1
+        while(list_start < 1 or list_start > (len(chapter_list) + 1)):
+            cpt_start = int(input('Choose a Starting Chapter: '))
+            # chapter index check
+            list_start = get_chapter_list_index(chapter_list, cpt_start)
+        start = [cpt_start, list_start]
 
-        save_chapters(novel_name, site_link, chapter_list, start-1, end-1)
+        list_end = -1
+        cpt_end = -1
+        while(list_end < list_start or list_end > (len(chapter_list) + 1)):
+            cpt_end = int(input('Choose a Ending Chapter: '))
+            # chapter index check
+            list_end = get_chapter_list_index(chapter_list, cpt_end)
+        end = [cpt_end, list_end]
+
+        save_chapters(novel_name, site_link, chapter_list, start, end)
     else:
         wuxia_faveourites(site_link)
         
-def save_chapters(novel_name, site_link, chapter_list, start_cpt, end_cpt):
+def save_chapters(novel_name, site_link, chapter_list, start, end):
     clear()
     print("Chapter are being Saved!!\n")
-
-    # chapter index check
-    start_cpt = chapter_index_check(chapter_list, start_cpt)
-    end_cpt = chapter_index_check(chapter_list, end_cpt)
 
     # Create target Directory if don't exist
     dirName = novel_name.replace("'", '').replace('\n', '')
@@ -230,27 +234,28 @@ def save_chapters(novel_name, site_link, chapter_list, start_cpt, end_cpt):
     #document initialization
     LNdocument = Document()
 
-    st_cpt = start_cpt+1
-    ed_cpt = end_cpt+1
+    st_cpt = start[0]
 
-    for index, chapter_link in enumerate(chapter_list[start_cpt:end_cpt+1], start_cpt):
-        ed_cpt = index + 1
+    for index, chapter_link in enumerate(chapter_list[start[1]:end[1]+1], start[0]):
         chapter_link = site_link + chapter_link['href']
-        # print(chapter_link)
+
+        # print title
         chapter_title, chapter_content = get_chapter_content(chapter_link)
         print(chapter_title)
 
+        # add to document
         LNdocument.add_heading(chapter_title, level=1)
         LNdocument.add_paragraph(chapter_content)
 
         #devide every 50 chapter in different doc file
-        if (ed_cpt % 50 == 0):            
-            doc_name = "{} {} - {}.docx".format(dirName, str(st_cpt), str(ed_cpt))
+        if (index % 50 == 0):            
+            doc_name = "{} {} - {}.docx".format(dirName, str(st_cpt), str(index))
             LNdocument.save(dirName+'/'+doc_name)
             LNdocument = Document()
-            st_cpt = ed_cpt+1
 
-    doc_name = "{} {} - {}.docx".format(dirName, str(st_cpt), str(ed_cpt))
+            st_cpt = index + 1
+
+    doc_name = "{} {} - {}.docx".format(dirName, str(st_cpt), str(end[0]))
     LNdocument.save(dirName+'/'+doc_name)
 
 def get_chapter_content(chapter_link):
@@ -262,11 +267,11 @@ def get_chapter_content(chapter_link):
 
     return chapter_title, chapter_content
 
-def chapter_index_check(chapter_list, index):
+def get_chapter_list_index(chapter_list, index):
     currect_index = 0
-    for i, cpt in enumerate(chapter_list):
-        if str(index) in cpt:
-            correct_index = i
+    for i, cpt in enumerate(chapter_list, 0):
+        if str(index) in cpt.get_text():
+            currect_index = i
             break
     
     return currect_index
