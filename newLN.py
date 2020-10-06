@@ -342,9 +342,9 @@ def wuxia_novel(novel_name, site_link, novel_page_link, backtrack = 0):
         else:
             wuxia_search(site_link, novel_name)
     
-    save_chapters(novel_name, site_link, chapter_list, start, end)
+    save_chapters(novel_name, site_link, novel_page_link, chapter_list, start, end)
         
-def save_chapters(novel_name, site_link, chapter_list, start, end):
+def save_chapters(novel_name, site_link, novel_page_link, chapter_list, start, end):
     clear()
     print("Chapter are being Saved!!\n")
 
@@ -380,6 +380,23 @@ def save_chapters(novel_name, site_link, chapter_list, start, end):
 
     doc_name = "{} {} - {}.docx".format(dirName, str(st_cpt), str(end[0]))
     LNdocument.save(dirName+'/'+doc_name)
+
+    print('\n')
+    print("1. Go Back to Chapter List")
+    print("2. Go Back to Novel Detail")
+    print("3. Go back to Favourites")
+    print("4. Go Back to Site Selection")
+
+    option = options(4)
+
+    if option == 1:
+        wuxia_novel(novel_name, site_link, novel_page_link)
+    elif option == 2:
+        wuxia_novel_detail(novel_name, site_link, novel_page_link)
+    elif option == 3:
+        wuxia_faveourites(site_link)
+    else:
+        main()
 
 def get_chapter_content(chapter_link):
     chapter_page_html = get_page_html(chapter_link)
