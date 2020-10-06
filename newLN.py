@@ -217,6 +217,10 @@ def save_chapters(novel_name, site_link, chapter_list, start_cpt, end_cpt):
     clear()
     print("Chapter are being Saved!!\n")
 
+    # chapter index check
+    start_cpt = chapter_index_check(chapter_list, start_cpt)
+    end_cpt = chapter_index_check(chapter_list, end_cpt)
+
     # Create target Directory if don't exist
     dirName = novel_name.replace("'", '').replace('\n', '')
     if not os.path.exists(dirName):
@@ -257,6 +261,15 @@ def get_chapter_content(chapter_link):
     chapter_content = structuring_chapter(chapter_content.prettify())
 
     return chapter_title, chapter_content
+
+def chapter_index_check(chapter_list, index):
+    currect_index = 0
+    for i, cpt in enumerate(chapter_list):
+        if str(index) in cpt:
+            correct_index = i
+            break
+    
+    return currect_index
 
     
 
